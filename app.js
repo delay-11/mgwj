@@ -936,11 +936,10 @@ function openSettings(){
     const text = overlay.querySelector('#feedbackText').value.trim();
     if(!text){ showToast('내용을 입력해주세요.'); return; }
     try{
-      const res = await window.storage.get('feedback', false);
-      const list = res && res.value ? JSON.parse(res.value) : [];
-      list.push({ text, createdAt: Date.now() });
-      await window.storage.set('feedback', JSON.stringify(list), false);
-    }catch(e){}
+      if(supabaseClient){
+        await supabaseClient.from('feedback').insert({ text, user_id: currentUser ? currentUser.id : null });
+      }
+    }catch(e){ console.warn('feedback submit failed', e); }
     overlay.querySelector('#feedbackForm').style.display = 'none';
     overlay.querySelector('#feedbackText').value = '';
     showToast('피드백을 남겨주셔서 감사해요!');
