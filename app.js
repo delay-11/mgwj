@@ -22,6 +22,11 @@ const REGIONS = Object.keys(REGION_DISTRICTS);
 const AMENITY_OPTIONS = ['예약','포장','배달','픽업가능','단체이용가능','무료주차','유료주차','발렛파킹','무선인터넷','남녀 화장실 구분','유아의자','노키즈존','야외석','반려동물 동반','대기공간','휴게공간','충전서비스','야간운영'];
 const AMENITY_ICON = {'예약':'📅','포장':'🥡','배달':'🛵','픽업가능':'🚶','단체이용가능':'👥','무료주차':'🅿️','유료주차':'💳','발렛파킹':'🚗','무선인터넷':'📶','남녀 화장실 구분':'🚻','유아의자':'🍼','노키즈존':'🚫','야외석':'☀️','반려동물 동반':'🐾','대기공간':'🪑','휴게공간':'🛋️','충전서비스':'🔌','야간운영':'🌙'};
 
+const SUPABASE_URL = 'https://xmuxoqjcxfxtqiockaum.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdXhvcWpjeGZ4dHFpb2NrYXVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1NjY5MzYsImV4cCI6MjEwMTE0MjkzNn0.ZxGDpFf5g7yzMst8lpbU226PQHMeUL60-cu7bytNcoU';
+const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+let currentUser = null;
+
 /* window.storage is provided automatically inside the Claude.ai artifact
    preview, but a plain page hosted elsewhere (e.g. GitHub Pages) has no
    such global. When it's missing, fall back to localStorage so saves still
@@ -120,6 +125,28 @@ function showToast(msg, duration){
 
 async function loadPlaces(){
   places = [];
+
+  if(currentUser && supabaseClient){
+    try{
+      const { data, error } = await supabaseClient
+        .from('places')
+        .select('id, data')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending:false });
+      if(error) throw error;
+      places = (data||[]).map(row=>{
+        const p = row.data;
+        if(!Array.isArray(p.photos)) p.photos = [];
+        return p;
+      });
+    }catch(e){
+      console.warn('Failed to load places from Supabase', e);
+      places = [];
+    }
+    render();
+    return;
+  }
+
   try{
     const legacy = await window.storage.get('places', false).catch(()=>null);
     if(legacy && legacy.value){
@@ -149,6 +176,22 @@ async function savePlace(place){
   // NOTE: save-failure popups are intentionally silenced for now (still
   // logged to the console for debugging). Re-add showToast(...) calls here
   // if you want the user to be warned when a save doesn't persist.
+  if(currentUser && supabaseClient){
+    try{
+      const { error } = await supabaseClient
+        .from('places')
+        .upsert({ id: place.id, user_id: currentUser.id, data: place });
+      if(error){
+        console.warn('supabase save failed', error);
+        return false;
+      }
+      return true;
+    }catch(e){
+      console.warn('supabase save threw', e);
+      return false;
+    }
+  }
+
   if(!window.storage || typeof window.storage.set !== 'function'){
     console.warn('window.storage unavailable; save not persisted.');
     return false;
@@ -166,7 +209,41 @@ async function savePlace(place){
   }
 }
 async function deletePlaceKey(id){
+  if(currentUser && supabaseClient){
+    try{ await supabaseClient.from('places').delete().eq('id', id).eq('user_id', currentUser.id); }catch(e){}
+    return;
+  }
   try{ await window.storage.delete('place:'+id, false); }catch(e){}
+}
+
+function getUserDisplayName(user){
+  return user?.user_metadata?.name || user?.user_metadata?.full_name || user?.user_metadata?.preferred_username || '카카오 사용자';
+}
+function getUserAvatar(user){
+  return user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
+}
+async function loginWithKakao(){
+  if(!supabaseClient){ showToast('로그인 기능을 사용할 수 없어요.'); return; }
+  await supabaseClient.auth.signInWithOAuth({ provider: 'kakao' });
+}
+async function logout(){
+  if(!supabaseClient) return;
+  await supabaseClient.auth.signOut();
+  const overlay = document.getElementById('sheetOverlay');
+  if(overlay) overlay.remove();
+  showToast('로그아웃했어요.');
+}
+async function initAuth(){
+  if(!supabaseClient){ loadPlaces(); return; }
+  const { data:{ session } } = await supabaseClient.auth.getSession();
+  currentUser = session?.user ?? null;
+  await loadPlaces();
+  supabaseClient.auth.onAuthStateChange((event, session)=>{
+    currentUser = session?.user ?? null;
+    loadPlaces();
+    const overlay = document.getElementById('sheetOverlay');
+    if(overlay && overlay.querySelector('.settings-profile')) openSettings();
+  });
 }
 
 function emptyPlace(){
@@ -764,6 +841,11 @@ function openSettings(){
   const overlay = document.createElement('div');
   overlay.className = 'sheet-overlay';
   overlay.id = 'sheetOverlay';
+  const displayName = currentUser ? getUserDisplayName(currentUser) : '게스트로 이용 중';
+  const avatarUrl = currentUser ? getUserAvatar(currentUser) : null;
+  const profileAvatarHtml = avatarUrl
+    ? `<img src="${avatarUrl}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none;">`
+    : `<div class="settings-avatar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>`;
   overlay.innerHTML = `
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -774,11 +856,14 @@ function openSettings(){
 
     <div class="settings-card" style="margin-bottom:16px;">
       <div class="settings-profile">
-        <div class="settings-avatar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
-        <div>
-          <div class="settings-profile-name">게스트로 이용 중</div>
-          <div class="settings-profile-sub">로그인하면 여러 기기에서 볼 수 있어요 (준비중)</div>
+        ${profileAvatarHtml}
+        <div style="flex:1;min-width:0;">
+          <div class="settings-profile-name">${escapeHtml(displayName)}</div>
+          <div class="settings-profile-sub">${currentUser ? '카카오 계정으로 로그인됨' : '카카오로 로그인하면 여러 기기에서 볼 수 있어요'}</div>
         </div>
+        ${currentUser
+          ? `<button type="button" id="logoutBtn" class="pill-btn" style="flex:none;padding:8px 14px;font-size:12.5px;">로그아웃</button>`
+          : `<button type="button" id="kakaoLoginBtn" class="pill-btn" style="flex:none;padding:8px 14px;font-size:12.5px;background:#FEE500;color:#191919;border-color:#FEE500;">카카오 로그인</button>`}
       </div>
     </div>
 
@@ -833,6 +918,11 @@ function openSettings(){
   overlay.onclick = (e)=>{ if(e.target===overlay) overlay.remove(); };
   overlay.querySelector('#closeSheet').onclick = ()=> overlay.remove();
 
+  const kakaoLoginBtn = overlay.querySelector('#kakaoLoginBtn');
+  if(kakaoLoginBtn) kakaoLoginBtn.onclick = ()=> loginWithKakao();
+  const logoutBtn = overlay.querySelector('#logoutBtn');
+  if(logoutBtn) logoutBtn.onclick = ()=> logout();
+
   overlay.querySelector('#feedbackRow').onclick = ()=>{
     const form = overlay.querySelector('#feedbackForm');
     const open = form.style.display === 'block';
@@ -881,4 +971,4 @@ function openSettings(){
 document.getElementById('openSettingsBtn').onclick = openSettings;
 
 updateDistrictFilterOptions();
-loadPlaces();
+initAuth();
