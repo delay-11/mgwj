@@ -26,6 +26,13 @@ html[data-theme="dark"]{
   --red-soft:#3A2320;
   --green:#3BCB8A;
 }
+@font-face{
+  font-family:'Griun Fromsol';
+  src:url('fonts/GriunFromsolRg.ttf') format('truetype');
+  font-weight:400;
+  font-style:normal;
+  font-display:swap;
+}
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;}
 body{ background:var(--bg); color:var(--ink); font-family:-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", 'Noto Sans KR', sans-serif; -webkit-font-smoothing:antialiased; }
@@ -33,7 +40,7 @@ body{ background:var(--bg); color:var(--ink); font-family:-apple-system, BlinkMa
 
 header.appbar{ position:sticky; top:0; z-index:20; background:var(--bg); padding:18px 18px 10px; border-bottom:1px solid var(--line); }
 .appbar-row{display:flex; align-items:center; justify-content:space-between;}
-.appbar h1{font-family:'Griun Fromsol Fallback','Gamja Flower',cursive; font-size:26px; font-weight:400; margin:0; letter-spacing:0.3px; color:var(--accent);}
+.appbar h1{font-family:'Griun Fromsol','Gamja Flower',cursive; font-size:26px; font-weight:400; margin:0; letter-spacing:0.3px; color:var(--accent);}
 .profile-btn{width:38px; height:38px; border-radius:50%; background:var(--accent-soft); color:var(--accent); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; flex:none;}
 
 .filters{display:flex; gap:8px; overflow-x:auto; padding:12px 18px 4px; scrollbar-width:none;}
