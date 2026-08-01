@@ -217,17 +217,14 @@ async function deletePlaceKey(id){
 }
 
 function getUserDisplayName(user){
-  return user?.user_metadata?.name || user?.user_metadata?.full_name || user?.user_metadata?.preferred_username || '카카오 사용자';
+  return user?.user_metadata?.name || user?.user_metadata?.full_name || user?.user_metadata?.preferred_username || '사용자';
 }
 function getUserAvatar(user){
   return user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
 }
-async function loginWithKakao(){
+async function loginWithGoogle(){
   if(!supabaseClient){ showToast('로그인 기능을 사용할 수 없어요.'); return; }
-  await supabaseClient.auth.signInWithOAuth({
-    provider: 'kakao',
-    options: { scopes: 'profile_nickname profile_image' }
-  });
+  await supabaseClient.auth.signInWithOAuth({ provider: 'google' });
 }
 async function logout(){
   if(!supabaseClient) return;
@@ -862,11 +859,11 @@ function openSettings(){
         ${profileAvatarHtml}
         <div style="flex:1;min-width:0;">
           <div class="settings-profile-name">${escapeHtml(displayName)}</div>
-          <div class="settings-profile-sub">${currentUser ? '카카오 계정으로 로그인됨' : '카카오로 로그인하면 여러 기기에서 볼 수 있어요'}</div>
+          <div class="settings-profile-sub">${currentUser ? 'Google 계정으로 로그인됨' : 'Google로 로그인하면 여러 기기에서 볼 수 있어요'}</div>
         </div>
         ${currentUser
           ? `<button type="button" id="logoutBtn" class="pill-btn" style="flex:none;padding:8px 14px;font-size:12.5px;">로그아웃</button>`
-          : `<button type="button" id="kakaoLoginBtn" class="pill-btn" style="flex:none;padding:8px 14px;font-size:12.5px;background:#FEE500;color:#191919;border-color:#FEE500;">카카오 로그인</button>`}
+          : `<button type="button" id="googleLoginBtn" class="pill-btn" style="flex:none;padding:8px 14px;font-size:12.5px;background:#fff;color:#3c4043;border-color:#dadce0;">Google로 로그인</button>`}
       </div>
     </div>
 
@@ -921,8 +918,8 @@ function openSettings(){
   overlay.onclick = (e)=>{ if(e.target===overlay) overlay.remove(); };
   overlay.querySelector('#closeSheet').onclick = ()=> overlay.remove();
 
-  const kakaoLoginBtn = overlay.querySelector('#kakaoLoginBtn');
-  if(kakaoLoginBtn) kakaoLoginBtn.onclick = ()=> loginWithKakao();
+  const googleLoginBtn = overlay.querySelector('#googleLoginBtn');
+  if(googleLoginBtn) googleLoginBtn.onclick = ()=> loginWithGoogle();
   const logoutBtn = overlay.querySelector('#logoutBtn');
   if(logoutBtn) logoutBtn.onclick = ()=> logout();
 
