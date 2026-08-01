@@ -226,7 +226,7 @@ async function loginWithKakao(){
   if(!supabaseClient){ showToast('로그인 기능을 사용할 수 없어요.'); return; }
   await supabaseClient.auth.signInWithOAuth({
     provider: 'kakao',
-    options: { scopes: 'profile_nickname profile_image' }
+    options: { redirectTo: window.location.origin + window.location.pathname }
   });
 }
 async function logout(){
