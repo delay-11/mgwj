@@ -555,7 +555,7 @@ function step1Html(){
   <div class="sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
-      <h2>${editingId ? '장소 수정' : '새 장소 기록'}</h2>
+      <h2>${editingId ? '장소 수정' : '새로운 장소'}</h2>
       <button class="close-x" id="closeSheet">✕</button>
     </div>
     <div class="steps-dots"><span class="on"></span><span></span></div>
@@ -584,7 +584,7 @@ function step1Html(){
 
     <div class="field">
       <label>이름</label>
-      <input type="text" id="f_name" value="${escapeHtml(p.name)}" placeholder="예: 몽탄">
+      <input type="text" id="f_name" value="${escapeHtml(p.name)}">
     </div>
 
     <div class="field">
@@ -599,7 +599,7 @@ function step1Html(){
 
     <div class="field">
       <label>주소 <span style="font-weight:400;color:var(--ink-faint);">(선택)</span></label>
-      <input type="text" id="f_address" value="${escapeHtml(p.address)}" placeholder="네이버지도에 표시된 주소">
+      <input type="text" id="f_address" value="${escapeHtml(p.address)}">
     </div>
 
     <div class="sheet-actions">
@@ -614,7 +614,7 @@ function step2Html(){
   <div class="sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
-      <h2>${editingId ? '장소 수정' : '새 장소 기록'}</h2>
+      <h2>${editingId ? '장소 수정' : '새로운 장소'}</h2>
       <button class="close-x" id="closeSheet">✕</button>
     </div>
     <div class="steps-dots"><span></span><span class="on"></span></div>
@@ -668,7 +668,7 @@ function step2Html(){
 
     <div class="field">
       <label>메모 <span style="font-weight:400;color:var(--ink-faint);">(선택)</span></label>
-      <textarea id="f_memo" placeholder="맛있었던 메뉴, 다음에 시도할 것 등">${escapeHtml(p.memo)}</textarea>
+      <textarea id="f_memo">${escapeHtml(p.memo)}</textarea>
     </div>
 
     <div class="sheet-actions">
