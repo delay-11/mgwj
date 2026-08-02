@@ -14,26 +14,28 @@
 </head>
 <body>
 <div class="app">
-  <header class="appbar">
-    <div class="appbar-row">
-      <h1>먹고왔지</h1>
-      <button class="profile-btn" id="openSettingsBtn" aria-label="설정">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      </button>
-    </div>
-  </header>
+  <div class="app-top">
+    <header class="appbar">
+      <div class="appbar-row">
+        <h1>먹고왔지</h1>
+        <button class="profile-btn" id="openSettingsBtn" aria-label="설정">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </header>
 
-  <div class="filters">
-    <div class="fchip active" id="catAll" data-cat="전체">전체</div>
-    <div class="fchip" id="catFood" data-cat="맛집">맛집</div>
-    <div class="fchip" id="catCafe" data-cat="카페">카페</div>
-    <div class="fchip" id="regionChip">
-      <select id="regionSelect"><option value="전체">지역</option></select>
+    <div class="filters">
+      <div class="fchip active" id="catAll" data-cat="전체">전체</div>
+      <div class="fchip" id="catFood" data-cat="맛집">맛집</div>
+      <div class="fchip" id="catCafe" data-cat="카페">카페</div>
+      <div class="fchip" id="regionChip">
+        <select id="regionSelect"><option value="전체">지역</option></select>
+      </div>
+      <div class="fchip" id="districtChip">
+        <select id="districtSelect" disabled><option value="전체">시군구</option></select>
+      </div>
+      <div class="fchip" id="openNowChip">지금 영업중</div>
     </div>
-    <div class="fchip" id="districtChip">
-      <select id="districtSelect" disabled><option value="전체">시군구</option></select>
-    </div>
-    <div class="fchip" id="openNowChip">지금 영업중</div>
   </div>
 
   <div id="grid" class="grid"></div>
