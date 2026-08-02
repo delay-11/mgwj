@@ -796,7 +796,7 @@ function bindStepEvents(overlay){
     thumbBox.onclick = ()=> thumbInput.click();
     thumbInput.onchange = (e)=>{
       const file = e.target.files[0]; if(!file) return;
-      squareCropFile(file, 750, 0.85).then(dataUrl=>{
+      squareCropFile(file, 1000, 0.82).then(dataUrl=>{
         wizard.thumbnail = dataUrl;
         thumbBox.innerHTML = `<img src="${dataUrl}">`;
       });
@@ -809,7 +809,7 @@ function bindStepEvents(overlay){
       const remaining = 9 - wizard.photos.length;
       const toProcess = files.slice(0, Math.max(0, remaining));
       for(const file of toProcess){
-        const dataUrl = await squareCropFile(file, 560, 0.75);
+        const dataUrl = await squareCropFile(file, 1000, 0.78);
         wizard.photos.push(dataUrl);
       }
       photosInput.value = '';
