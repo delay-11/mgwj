@@ -66,7 +66,7 @@ let currentUser = null;
 })();
 
 let places = [];
-let filters = { cat:'전체', region:'전체', district:'전체', openNow:false };
+let filters = { cat:'전체', region:'전체', district:'전체', openNow:false, pet:false };
 let editingId = null;
 let wizard = null;
 let step = 1;
@@ -338,6 +338,7 @@ function getFiltered(){
     if(filters.region!=='전체' && p.region!==filters.region) return false;
     if(filters.district!=='전체' && p.district!==filters.district) return false;
     if(filters.openNow && !isOpenNow(p)) return false;
+    if(filters.pet && !p.amenities.includes('반려동물 동반')) return false;
     return true;
   }).sort((a,b)=>b.createdAt-a.createdAt);
 }
@@ -420,6 +421,11 @@ document.getElementById('districtSelect').onchange = e=>{
 document.getElementById('openNowChip').onclick = ()=>{
   filters.openNow = !filters.openNow;
   document.getElementById('openNowChip').classList.toggle('active', filters.openNow);
+  render();
+};
+document.getElementById('petChip').onclick = ()=>{
+  filters.pet = !filters.pet;
+  document.getElementById('petChip').classList.toggle('active', filters.pet);
   render();
 };
 
