@@ -87,7 +87,7 @@ function squareCropFile(file, outSize, quality){
         canvas.width = outSize; canvas.height = outSize;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, sx, sy, size, size, 0, 0, outSize, outSize);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+        resolve(canvas.toDataURL('image/webp', quality));
       };
       img.src = ev.target.result;
     };
@@ -796,7 +796,7 @@ function bindStepEvents(overlay){
     thumbBox.onclick = ()=> thumbInput.click();
     thumbInput.onchange = (e)=>{
       const file = e.target.files[0]; if(!file) return;
-      squareCropFile(file, 700, 0.8).then(dataUrl=>{
+      squareCropFile(file, 750, 0.85).then(dataUrl=>{
         wizard.thumbnail = dataUrl;
         thumbBox.innerHTML = `<img src="${dataUrl}">`;
       });
@@ -809,7 +809,7 @@ function bindStepEvents(overlay){
       const remaining = 9 - wizard.photos.length;
       const toProcess = files.slice(0, Math.max(0, remaining));
       for(const file of toProcess){
-        const dataUrl = await squareCropFile(file, 420, 0.6);
+        const dataUrl = await squareCropFile(file, 560, 0.75);
         wizard.photos.push(dataUrl);
       }
       photosInput.value = '';
