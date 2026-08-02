@@ -104,7 +104,7 @@ function renderPhotoStrip(overlay){
       <img src="${src}">
       <button type="button" class="photo-remove" data-idx="${idx}">✕</button>
     </div>`).join('');
-  if(wizard.photos.length < 4){
+  if(wizard.photos.length < 9){
     html += `<div class="photo-add-btn" id="photoAddBtn">＋</div>`;
   }
   strip.innerHTML = html;
@@ -589,7 +589,7 @@ function step1Html(){
     </div>
 
     <div class="field">
-      <label>추가 사진 <span style="font-weight:400;color:var(--ink-faint);">(최대 4장, 대표사진 포함 총 5장)</span></label>
+      <label>추가 사진 <span style="font-weight:400;color:var(--ink-faint);">(최대 9장, 대표사진 포함 총 10장)</span></label>
       <div class="photo-strip" id="photoStrip"></div>
       <input type="file" id="photosInput" accept="image/*" multiple style="display:none;">
     </div>
@@ -750,10 +750,10 @@ function bindStepEvents(overlay){
     renderPhotoStrip(overlay);
     photosInput.onchange = async (e)=>{
       const files = Array.from(e.target.files || []);
-      const remaining = 4 - wizard.photos.length;
+      const remaining = 9 - wizard.photos.length;
       const toProcess = files.slice(0, Math.max(0, remaining));
       for(const file of toProcess){
-        const dataUrl = await squareCropFile(file, 480, 0.7);
+        const dataUrl = await squareCropFile(file, 420, 0.6);
         wizard.photos.push(dataUrl);
       }
       photosInput.value = '';
