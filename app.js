@@ -465,9 +465,11 @@ function openDetail(id){
          <div class="detail-gallery-scroll" id="gallerySc">
            ${allPhotos.map(src=>`<div class="detail-gallery-slide" style="background-image:url('${src}')"></div>`).join('')}
          </div>
+         <button type="button" class="gallery-arrow prev" id="galleryPrev" aria-label="이전 사진">‹</button>
+         <button type="button" class="gallery-arrow next" id="galleryNext" aria-label="다음 사진">›</button>
        </div>
        <div class="detail-gallery-dots" id="galleryDots">
-         ${allPhotos.map((_, i)=>`<span class="${i===0?'active':''}"></span>`).join('')}
+         ${allPhotos.map((_, i)=>`<span class="${i===0?'active':''}" data-idx="${i}"></span>`).join('')}
        </div>`
     : `<div class="detail-thumb" style="${allPhotos[0]?`background-image:url('${allPhotos[0]}')`:''}"></div>`;
 
@@ -505,10 +507,23 @@ function openDetail(id){
   if(allPhotos.length > 1){
     const sc = overlay.querySelector('#gallerySc');
     const dots = overlay.querySelectorAll('#galleryDots span');
-    sc.onscroll = ()=>{
-      const idx = Math.round(sc.scrollLeft / sc.clientWidth);
-      dots.forEach((d,i)=> d.classList.toggle('active', i===idx));
+    const prevBtn = overlay.querySelector('#galleryPrev');
+    const nextBtn = overlay.querySelector('#galleryNext');
+    const currentIdx = ()=> Math.round(sc.scrollLeft / sc.clientWidth);
+    const goTo = (idx)=>{
+      idx = Math.max(0, Math.min(allPhotos.length-1, idx));
+      sc.scrollTo({ left: idx*sc.clientWidth, behavior:'smooth' });
     };
+    sc.onscroll = ()=>{
+      const idx = currentIdx();
+      dots.forEach((d,i)=> d.classList.toggle('active', i===idx));
+      prevBtn.disabled = idx===0;
+      nextBtn.disabled = idx===allPhotos.length-1;
+    };
+    prevBtn.onclick = ()=> goTo(currentIdx()-1);
+    nextBtn.onclick = ()=> goTo(currentIdx()+1);
+    dots.forEach(d=>{ d.onclick = ()=> goTo(Number(d.dataset.idx)); });
+    prevBtn.disabled = true;
   }
   overlay.onclick = (e)=>{ if(e.target===overlay) overlay.remove(); };
   overlay.querySelector('#closeSheet').onclick = ()=> overlay.remove();
