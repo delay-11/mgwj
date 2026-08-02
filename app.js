@@ -272,7 +272,7 @@ async function initAuth(){
 function emptyPlace(){
   return {
     id: uid(), name:'', category:'맛집', region:'', district:'', address:'', thumbnail:null, photos:[],
-    hoursMode:'same', hoursSame:{open:'11:00', close:'21:00'}, closedDays:[],
+    hoursMode:'same', hoursSame:{open:'11:00', close:'21:00', breakEnabled:false, breakStart:'15:00', breakEnd:'17:00'}, closedDays:[],
     hoursCustom: DAYS.map(d=>({day:d, closed:false, open:'11:00', close:'21:00'})),
     restroom:'unknown', amenities:[], memo:'', createdAt: Date.now()
   };
@@ -287,10 +287,21 @@ function getHoursForDay(p, idx){
   if(p.hoursMode === 'same') return { closed: p.closedDays.includes(idx), open:p.hoursSame.open, close:p.hoursSame.close };
   return p.hoursCustom[idx];
 }
+function isBreakTimeNow(p){
+  if(p.hoursMode !== 'same' || !p.hoursSame.breakEnabled) return false;
+  const idx = todayIndex();
+  if(p.closedDays.includes(idx)) return false;
+  const now = new Date(); const cur = now.getHours()*60+now.getMinutes();
+  const [bsh,bsm]=p.hoursSame.breakStart.split(':').map(Number), [beh,bem]=p.hoursSame.breakEnd.split(':').map(Number);
+  const bs_=bsh*60+bsm, be_=beh*60+bem;
+  if(be_ <= bs_) return cur>=bs_ || cur<be_;
+  return cur>=bs_ && cur<be_;
+}
 function isOpenNow(p){
   const idx = todayIndex();
   const h = getHoursForDay(p, idx);
   if(!h || h.closed) return false;
+  if(isBreakTimeNow(p)) return false;
   const now = new Date(); const cur = now.getHours()*60+now.getMinutes();
   const [oh,om]=h.open.split(':').map(Number), [ch,cm]=h.close.split(':').map(Number);
   const om_=oh*60+om, cm_=ch*60+cm;
@@ -300,6 +311,7 @@ function isOpenNow(p){
 function getStatus(p){
   const idx = todayIndex();
   if(!isOpenOnDayIdx(p, idx)) return {label:'휴무', cls:'holiday'};
+  if(isBreakTimeNow(p)) return {label:'브레이크타임', cls:'closed'};
   if(isOpenNow(p)) return {label:'영업중', cls:'open'};
   return {label:'영업종료', cls:'closed'};
 }
@@ -423,11 +435,13 @@ function openDetail(id){
   const st = getStatus(p);
   const regionTxt = [p.region, p.district].filter(Boolean).join(' ');
 
+  const hasBreak = p.hoursMode === 'same' && p.hoursSame.breakEnabled;
   const groups = buildHoursGroups(p);
   const hoursHtml = groups.map(g=>{
     const label = g.startIdx===g.endIdx ? DAYS[g.startIdx] : `${DAYS[g.startIdx]}~${DAYS[g.endIdx]}`;
     const off = g.data.closed;
-    return `<div class="detail-hours-row"><span class="dname">${label}</span><span class="htime ${off?'off':''}">${off?'휴무':(g.data.open+' ~ '+g.data.close)}</span></div>`;
+    const breakTxt = (!off && hasBreak) ? ` (브레이크 ${p.hoursSame.breakStart}~${p.hoursSame.breakEnd})` : '';
+    return `<div class="detail-hours-row"><span class="dname">${label}</span><span class="htime ${off?'off':''}">${off?'휴무':(g.data.open+' ~ '+g.data.close+breakTxt)}</span></div>`;
   }).join('');
 
   const tags = [];
@@ -652,6 +666,17 @@ function step2Html(){
           <span class="tilde">~</span>
           <input type="time" id="sameClose" value="${p.hoursSame.close}">
         </div>
+
+        <div style="margin-top:12px; display:flex; align-items:center; justify-content:space-between;">
+          <label style="margin:0;">브레이크타임</label>
+          <button type="button" id="breakToggle" class="pill-btn ${p.hoursSame.breakEnabled?'active':''}" style="padding:6px 14px; font-size:12.5px;">${p.hoursSame.breakEnabled?'있음':'없음'}</button>
+        </div>
+        <div class="time-row" id="breakTimeRow" style="margin-top:8px; ${p.hoursSame.breakEnabled?'':'display:none;'}">
+          <input type="time" id="breakStart" value="${p.hoursSame.breakStart || '15:00'}">
+          <span class="tilde">~</span>
+          <input type="time" id="breakEnd" value="${p.hoursSame.breakEnd || '17:00'}">
+        </div>
+
         <label style="margin-top:12px;">휴무일 <span style="font-weight:400;color:var(--ink-faint);">(없으면 비워두세요)</span></label>
         <div class="day-grid" id="closedDayGrid">
           ${DAYS.map((d,i)=>`<button type="button" class="pill-btn ${p.closedDays.includes(i)?'active':''}" data-day="${i}">${d}</button>`).join('')}
@@ -779,6 +804,12 @@ function bindStepEvents(overlay){
     overlay.querySelectorAll('#closedDayGrid .pill-btn').forEach(b=>{
       b.onclick=()=>{ b.classList.toggle('active'); };
     });
+    overlay.querySelector('#breakToggle').onclick = (e)=>{
+      const btn = e.currentTarget;
+      const on = btn.classList.toggle('active');
+      btn.textContent = on ? '있음' : '없음';
+      overlay.querySelector('#breakTimeRow').style.display = on ? 'flex' : 'none';
+    };
     overlay.querySelectorAll('.closed-toggle').forEach(b=>{
       b.onclick=()=>{
         b.classList.toggle('on');
@@ -828,6 +859,9 @@ function bindStepEvents(overlay){
 function collectStep2(overlay){
   wizard.hoursSame.open = overlay.querySelector('#sameOpen').value || '00:00';
   wizard.hoursSame.close = overlay.querySelector('#sameClose').value || '00:00';
+  wizard.hoursSame.breakEnabled = overlay.querySelector('#breakToggle').classList.contains('active');
+  wizard.hoursSame.breakStart = overlay.querySelector('#breakStart').value || '00:00';
+  wizard.hoursSame.breakEnd = overlay.querySelector('#breakEnd').value || '00:00';
   wizard.closedDays = Array.from(overlay.querySelectorAll('#closedDayGrid .pill-btn.active')).map(b=>Number(b.dataset.day));
   wizard.hoursCustom = DAYS.map((d,i)=>({
     day:d,
