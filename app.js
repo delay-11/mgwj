@@ -273,7 +273,7 @@ function emptyPlace(){
   return {
     id: uid(), name:'', category:'맛집', region:'', district:'', address:'', thumbnail:null, photos:[],
     hoursMode:'same', hoursSame:{open:'11:00', close:'21:00', breakEnabled:false, breakStart:'15:00', breakEnd:'17:00'}, closedDays:[],
-    hoursCustom: DAYS.map(d=>({day:d, closed:false, open:'11:00', close:'21:00'})),
+    hoursCustom: DAYS.map(d=>({day:d, closed:false, open:'11:00', close:'21:00', breakEnabled:false, breakStart:'15:00', breakEnd:'17:00'})),
     restroom:'unknown', amenities:[], memo:'', createdAt: Date.now()
   };
 }
@@ -284,15 +284,15 @@ function isOpenOnDayIdx(p, idx){
   const h = p.hoursCustom[idx]; return h && !h.closed;
 }
 function getHoursForDay(p, idx){
-  if(p.hoursMode === 'same') return { closed: p.closedDays.includes(idx), open:p.hoursSame.open, close:p.hoursSame.close };
+  if(p.hoursMode === 'same') return { closed: p.closedDays.includes(idx), open:p.hoursSame.open, close:p.hoursSame.close, breakEnabled:p.hoursSame.breakEnabled, breakStart:p.hoursSame.breakStart, breakEnd:p.hoursSame.breakEnd };
   return p.hoursCustom[idx];
 }
 function isBreakTimeNow(p){
-  if(p.hoursMode !== 'same' || !p.hoursSame.breakEnabled) return false;
   const idx = todayIndex();
-  if(p.closedDays.includes(idx)) return false;
+  const h = getHoursForDay(p, idx);
+  if(!h || h.closed || !h.breakEnabled) return false;
   const now = new Date(); const cur = now.getHours()*60+now.getMinutes();
-  const [bsh,bsm]=p.hoursSame.breakStart.split(':').map(Number), [beh,bem]=p.hoursSame.breakEnd.split(':').map(Number);
+  const [bsh,bsm]=h.breakStart.split(':').map(Number), [beh,bem]=h.breakEnd.split(':').map(Number);
   const bs_=bsh*60+bsm, be_=beh*60+bem;
   if(be_ <= bs_) return cur>=bs_ || cur<be_;
   return cur>=bs_ && cur<be_;
@@ -318,7 +318,8 @@ function getStatus(p){
 function buildHoursGroups(p){
   const dayData = DAYS.map((d,i)=>{
     const h = getHoursForDay(p, i);
-    return { closed:h.closed, open:h.open, close:h.close, key: h.closed ? 'closed' : (h.open+'-'+h.close) };
+    const breakKey = h.breakEnabled ? (h.breakStart+'~'+h.breakEnd) : 'nobreak';
+    return { closed:h.closed, open:h.open, close:h.close, breakEnabled:h.breakEnabled, breakStart:h.breakStart, breakEnd:h.breakEnd, key: h.closed ? 'closed' : (h.open+'-'+h.close+'-'+breakKey) };
   });
   const groups = [];
   let i = 0;
@@ -435,12 +436,11 @@ function openDetail(id){
   const st = getStatus(p);
   const regionTxt = [p.region, p.district].filter(Boolean).join(' ');
 
-  const hasBreak = p.hoursMode === 'same' && p.hoursSame.breakEnabled;
   const groups = buildHoursGroups(p);
   const hoursHtml = groups.map(g=>{
     const label = g.startIdx===g.endIdx ? DAYS[g.startIdx] : `${DAYS[g.startIdx]}~${DAYS[g.endIdx]}`;
     const off = g.data.closed;
-    const breakTxt = (!off && hasBreak) ? ` (브레이크 ${p.hoursSame.breakStart}~${p.hoursSame.breakEnd})` : '';
+    const breakTxt = (!off && g.data.breakEnabled) ? ` (브레이크 ${g.data.breakStart}~${g.data.breakEnd})` : '';
     return `<div class="detail-hours-row"><span class="dname">${label}</span><span class="htime ${off?'off':''}">${off?'휴무':(g.data.open+' ~ '+g.data.close+breakTxt)}</span></div>`;
   }).join('');
 
@@ -685,13 +685,23 @@ function step2Html(){
 
       <div id="customHoursBox" style="${p.hoursMode==='same'?'display:none;':''}">
         <div class="custom-hours-list">
-          ${DAYS.map((d,i)=>`
+          ${DAYS.map((d,i)=>{
+            const day = p.hoursCustom[i];
+            const breakOn = !!day.breakEnabled;
+            return `
             <div class="custom-hours-row">
               <span class="dname">${d}</span>
-              <button type="button" class="closed-toggle ${p.hoursCustom[i].closed?'on':''}" data-idx="${i}">휴무</button>
-              <input type="time" class="cOpen" data-idx="${i}" value="${p.hoursCustom[i].open}" ${p.hoursCustom[i].closed?'disabled':''}>
-              <input type="time" class="cClose" data-idx="${i}" value="${p.hoursCustom[i].close}" ${p.hoursCustom[i].closed?'disabled':''}>
-            </div>`).join('')}
+              <button type="button" class="closed-toggle ${day.closed?'on':''}" data-idx="${i}">휴무</button>
+              <input type="time" class="cOpen" data-idx="${i}" value="${day.open}" ${day.closed?'disabled':''}>
+              <input type="time" class="cClose" data-idx="${i}" value="${day.close}" ${day.closed?'disabled':''}>
+            </div>
+            <div class="custom-break-row" data-idx="${i}" style="display:${day.closed?'none':'flex'}; align-items:center; gap:6px; margin:0 0 8px 34px;">
+              <button type="button" class="cBreakToggle pill-btn ${breakOn?'active':''}" data-idx="${i}" style="padding:4px 10px; font-size:11px;">${breakOn?'브레이크 있음':'브레이크 없음'}</button>
+              <input type="time" class="cBreakStart" data-idx="${i}" value="${day.breakStart || '15:00'}" style="display:${breakOn?'block':'none'}; padding:6px; border:1.5px solid var(--line); border-radius:8px; font-size:11.5px; font-family:inherit; background:var(--surface); color:var(--ink);">
+              <span class="cBreakTilde" data-idx="${i}" style="display:${breakOn?'inline':'none'}; color:var(--ink-faint); font-size:11px;">~</span>
+              <input type="time" class="cBreakEnd" data-idx="${i}" value="${day.breakEnd || '17:00'}" style="display:${breakOn?'block':'none'}; padding:6px; border:1.5px solid var(--line); border-radius:8px; font-size:11.5px; font-family:inherit; background:var(--surface); color:var(--ink);">
+            </div>`;
+          }).join('')}
         </div>
       </div>
     </div>
@@ -817,6 +827,17 @@ function bindStepEvents(overlay){
         const on = b.classList.contains('on');
         overlay.querySelector(`.cOpen[data-idx="${idx}"]`).disabled = on;
         overlay.querySelector(`.cClose[data-idx="${idx}"]`).disabled = on;
+        overlay.querySelector(`.custom-break-row[data-idx="${idx}"]`).style.display = on ? 'none' : 'flex';
+      };
+    });
+    overlay.querySelectorAll('.cBreakToggle').forEach(b=>{
+      b.onclick=()=>{
+        const idx = b.dataset.idx;
+        const on = b.classList.toggle('active');
+        b.textContent = on ? '브레이크 있음' : '브레이크 없음';
+        overlay.querySelector(`.cBreakStart[data-idx="${idx}"]`).style.display = on ? 'block' : 'none';
+        overlay.querySelector(`.cBreakEnd[data-idx="${idx}"]`).style.display = on ? 'block' : 'none';
+        overlay.querySelector(`.cBreakTilde[data-idx="${idx}"]`).style.display = on ? 'inline' : 'none';
       };
     });
     const restroomBtns = overlay.querySelectorAll('.restroom-select .pill-btn');
@@ -867,7 +888,10 @@ function collectStep2(overlay){
     day:d,
     closed: overlay.querySelector(`.closed-toggle[data-idx="${i}"]`).classList.contains('on'),
     open: overlay.querySelector(`.cOpen[data-idx="${i}"]`).value || '00:00',
-    close: overlay.querySelector(`.cClose[data-idx="${i}"]`).value || '00:00'
+    close: overlay.querySelector(`.cClose[data-idx="${i}"]`).value || '00:00',
+    breakEnabled: overlay.querySelector(`.cBreakToggle[data-idx="${i}"]`).classList.contains('active'),
+    breakStart: overlay.querySelector(`.cBreakStart[data-idx="${i}"]`).value || '00:00',
+    breakEnd: overlay.querySelector(`.cBreakEnd[data-idx="${i}"]`).value || '00:00'
   }));
   wizard.memo = overlay.querySelector('#f_memo').value.trim();
 }
