@@ -236,13 +236,33 @@ async function logout(){
   if(overlay) overlay.remove();
   showToast('로그아웃했어요.');
 }
+async function migrateGuestPlacesToAccount(){
+  if(!currentUser || !supabaseClient) return;
+  try{
+    const listRes = await window.storage.list('place:', false);
+    const keys = (listRes && listRes.keys) ? listRes.keys : [];
+    if(keys.length === 0) return;
+    const results = await Promise.all(keys.map(k => window.storage.get(k, false).catch(()=>null)));
+    const localPlaces = results.filter(r=>r && r.value).map(r=>JSON.parse(r.value));
+    if(localPlaces.length === 0) return;
+
+    const rows = localPlaces.map(p => ({ id: p.id, user_id: currentUser.id, data: p }));
+    const { error } = await supabaseClient.from('places').upsert(rows);
+    if(error){ console.warn('guest place migration failed', error); return; }
+
+    await Promise.all(keys.map(k => window.storage.delete(k, false).catch(()=>{})));
+    showToast('게스트로 기록했던 장소를 계정으로 옮겼어요.');
+  }catch(e){ console.warn('guest place migration threw', e); }
+}
 async function initAuth(){
   if(!supabaseClient){ loadPlaces(); return; }
   const { data:{ session } } = await supabaseClient.auth.getSession();
   currentUser = session?.user ?? null;
+  if(currentUser) await migrateGuestPlacesToAccount();
   await loadPlaces();
-  supabaseClient.auth.onAuthStateChange((event, session)=>{
+  supabaseClient.auth.onAuthStateChange(async (event, session)=>{
     currentUser = session?.user ?? null;
+    if(event === 'SIGNED_IN' && currentUser) await migrateGuestPlacesToAccount();
     loadPlaces();
     const overlay = document.getElementById('sheetOverlay');
     if(overlay && overlay.querySelector('.settings-profile')) openSettings();
