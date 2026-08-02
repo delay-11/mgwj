@@ -83,10 +83,11 @@ function squareCropFile(file, outSize, quality){
       img.onload = ()=>{
         const size = Math.min(img.width, img.height);
         const sx = (img.width - size)/2, sy = (img.height - size)/2;
+        const finalSize = Math.min(size, outSize);
         const canvas = document.createElement('canvas');
-        canvas.width = outSize; canvas.height = outSize;
+        canvas.width = finalSize; canvas.height = finalSize;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, sx, sy, size, size, 0, 0, outSize, outSize);
+        ctx.drawImage(img, sx, sy, size, size, 0, 0, finalSize, finalSize);
         resolve(canvas.toDataURL('image/webp', quality));
       };
       img.src = ev.target.result;
@@ -796,7 +797,7 @@ function bindStepEvents(overlay){
     thumbBox.onclick = ()=> thumbInput.click();
     thumbInput.onchange = (e)=>{
       const file = e.target.files[0]; if(!file) return;
-      squareCropFile(file, 1000, 0.82).then(dataUrl=>{
+      squareCropFile(file, 1440, 0.9).then(dataUrl=>{
         wizard.thumbnail = dataUrl;
         thumbBox.innerHTML = `<img src="${dataUrl}">`;
       });
@@ -809,7 +810,7 @@ function bindStepEvents(overlay){
       const remaining = 9 - wizard.photos.length;
       const toProcess = files.slice(0, Math.max(0, remaining));
       for(const file of toProcess){
-        const dataUrl = await squareCropFile(file, 1000, 0.78);
+        const dataUrl = await squareCropFile(file, 1440, 0.88);
         wizard.photos.push(dataUrl);
       }
       photosInput.value = '';
