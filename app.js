@@ -999,16 +999,16 @@ function openSettings(){
     <div class="settings-section">
       <div class="settings-section-title">앱 정보</div>
       <div class="settings-card">
-        <div class="settings-row">
-          <div class="settings-row-label">버전</div>
-          <div class="settings-row-value">1.0.0</div>
-        </div>
         <div class="settings-row" id="feedbackRow" style="cursor:pointer;">
           <div>
             <div class="settings-row-label">피드백 보내기</div>
             <div class="settings-row-sub">불편한 점이나 개선 아이디어를 알려주세요</div>
           </div>
           <span style="color:var(--ink-faint); font-size:16px;" id="feedbackChevron">›</span>
+        </div>
+        <div class="settings-row" id="privacyRow" style="cursor:pointer;">
+          <div class="settings-row-label">개인정보처리방침</div>
+          <span style="color:var(--ink-faint); font-size:16px;">›</span>
         </div>
       </div>
       <div id="feedbackForm" style="display:none; padding-top:10px;">
@@ -1026,6 +1026,10 @@ function openSettings(){
   const logoutBtn = overlay.querySelector('#logoutBtn');
   if(logoutBtn) logoutBtn.onclick = ()=> logout();
 
+  overlay.querySelector('#privacyRow').onclick = ()=>{
+    overlay.remove();
+    openPrivacyPolicy();
+  };
   overlay.querySelector('#feedbackRow').onclick = ()=>{
     const form = overlay.querySelector('#feedbackForm');
     const open = form.style.display === 'block';
@@ -1070,6 +1074,58 @@ function openSettings(){
     });
   };
 }
+/* ---------- privacy policy ---------- */
+const PRIVACY_SECTIONS = [
+  { title:'1. 제목 및 서문', body:'"먹고왔지"(이하 "서비스")를 운영하는 개발자(이하 "운영자")는 이용자의 개인정보를 소중히 다루며, 관련 법령을 준수하기 위해 다음과 같이 개인정보처리방침을 수립·공개합니다.' },
+  { title:'2. 개인정보의 처리 목적', body:'· 회원 식별 및 카카오 로그인을 통한 인증\n· 여러 기기 간 등록한 장소 정보 동기화\n· 피드백 접수 및 처리' },
+  { title:'3. 처리하는 개인정보의 항목', body:'· 카카오 로그인 시: 닉네임, 프로필 사진, 이메일 주소\n· 서비스 이용 중 이용자가 직접 등록: 장소명, 사진, 메모, 영업시간 등 장소 정보\n· 피드백 이용 시: 작성한 피드백 내용' },
+  { title:'4. 14세 미만 아동의 개인정보 처리에 관한 사항', body:'본 서비스는 만 14세 미만 아동을 이용 대상으로 하지 않으며, 아동의 개인정보를 별도로 수집하지 않습니다.' },
+  { title:'5. 개인정보의 처리 및 보유 기간', body:'이용자가 회원 탈퇴(계정 삭제)할 때까지 보유합니다. 현재는 설정 화면의 "모든 기록 초기화"를 통해 등록한 장소 기록을 직접 삭제할 수 있으며, 계정 자체를 삭제하는 기능은 추후 추가될 예정입니다.' },
+  { title:'6. 개인정보의 파기 절차 및 방법에 관한 사항', body:'이용자가 삭제를 요청하거나 회원 탈퇴 시, 지체 없이 데이터베이스에서 해당 개인정보를 파기합니다.' },
+  { title:'7. 개인정보의 제3자 제공에 관한 사항', body:'운영자는 이용자의 개인정보를 원칙적으로 외부에 제공하지 않습니다.' },
+  { title:'8. 추가적인 이용·제공이 지속적으로 발생 시 판단 기준', body:'해당 사항 없음' },
+  { title:'9. 개인정보 처리업무의 위탁에 관한 사항', body:'서비스는 데이터베이스 및 인증 기능을 위해 Supabase Inc.에 개인정보 처리를 위탁하고 있습니다.\n위탁 업무 내용: 회원 인증, 데이터 저장 및 관리' },
+  { title:'10. 개인정보의 국외 수집 및 이전에 관한 사항', body:'위탁업체인 Supabase Inc.는 해외(미국)에 소재한 사업자이며, 실제 데이터가 저장되는 서버 인프라는 대한민국 서울(AWS ap-northeast-2 리전)에 위치해 있습니다.' },
+  { title:'11. 개인정보의 안전성 확보조치에 관한 사항', body:'· 카카오 OAuth를 통한 안전한 로그인 인증\n· Supabase의 Row Level Security(RLS)를 적용하여 이용자 본인의 데이터만 접근 가능하도록 접근을 통제하고 있습니다.' },
+  { title:'12. 민감정보의 공개 가능성 및 비공개를 선택하는 방법', body:'해당 사항 없음 (민감정보를 수집하지 않습니다)' },
+  { title:'13. 가명정보 처리에 관한 사항', body:'해당 사항 없음' },
+  { title:'14. 개인정보 자동 수집 장치의 설치·운영 및 거부에 관한 사항', body:'서비스는 로그인 상태 유지를 위해 브라우저의 로컬 저장소(local storage)를 필수적으로 사용합니다. 광고 또는 마케팅 목적의 쿠키는 사용하지 않습니다. 브라우저 설정을 통해 저장을 거부할 수 있으나, 이 경우 로그인 기능 이용이 제한될 수 있습니다.' },
+  { title:'15. 자동 수집 장치를 통해 제3자가 행태정보를 수집하도록 허용하는 경우', body:'해당 사항 없음 (광고·트래킹 목적의 제3자 도구를 사용하지 않습니다)' },
+  { title:'16. 정보주체와 법정대리인의 권리·의무 및 행사방법에 관한 사항', body:'이용자는 언제든지 자신의 개인정보 열람, 정정, 삭제, 처리정지를 요구할 수 있습니다. 앱 내 "피드백 보내기" 기능을 통해 요청해 주시면 신속히 처리하겠습니다.' },
+  { title:'17. 자동화된 결정에 관한 사항', body:'해당 사항 없음' },
+  { title:'18. 개인정보 보호책임자에 관한 사항', body:'· 성명: 개발자(delay-11)\n· 문의: 앱 내 "피드백 보내기" 기능을 통해 접수 (별도 이메일은 공개하지 않습니다)' },
+  { title:'19. 국내대리인 지정에 관한 사항', body:'해당 사항 없음' },
+  { title:'20. 정보주체의 권익침해에 대한 구제방법', body:'개인정보 침해로 인한 신고나 상담이 필요하신 경우 아래 기관에 문의하실 수 있습니다.\n· 개인정보분쟁조정위원회 (privacy.go.kr / 국번없이 1833-6972)\n· 개인정보침해신고센터 (privacy.go.kr / 국번없이 118)\n· 대검찰청 사이버범죄수사단 (spo.go.kr / 국번없이 1301)\n· 경찰청 사이버수사국 (ecrm.cyber.go.kr / 국번없이 182)' },
+  { title:'21. 고정형 영상정보처리기기 운영·관리에 관한 사항', body:'해당 사항 없음' },
+  { title:'22. 이동형 영상정보처리기기 운영·관리에 관한 사항', body:'해당 사항 없음' },
+  { title:'23. 개인정보 처리방침 관련 자율적으로 정한 사항', body:'해당 사항 없음' },
+  { title:'24. 개인정보 처리방침의 변경에 관한 사항', body:'이 개인정보처리방침은 2026년 8월 11일부터 적용됩니다. 내용이 변경되는 경우 앱 내 공지를 통해 안내하겠습니다.' }
+];
+function openPrivacyPolicy(){
+  const old = document.getElementById('sheetOverlay');
+  if(old) old.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'sheet-overlay';
+  overlay.id = 'sheetOverlay';
+  const sectionsHtml = PRIVACY_SECTIONS.map(s=>`
+    <div class="detail-section">
+      <div class="dlabel">${escapeHtml(s.title)}</div>
+      <div style="font-size:13px; line-height:1.65; color:var(--ink);">${escapeHtml(s.body).replace(/\n/g,'<br>')}</div>
+    </div>`).join('');
+  overlay.innerHTML = `
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h2>개인정보처리방침</h2>
+      <button class="close-x" id="closeSheet">✕</button>
+    </div>
+    ${sectionsHtml}
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.onclick = (e)=>{ if(e.target===overlay) overlay.remove(); };
+  overlay.querySelector('#closeSheet').onclick = ()=> overlay.remove();
+}
+
 document.getElementById('openSettingsBtn').onclick = openSettings;
 
 updateDistrictFilterOptions();
