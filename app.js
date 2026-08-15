@@ -129,20 +129,33 @@ async function loadPlaces(){
 
   if(currentUser && supabaseClient){
     try{
-      const { data, error } = await supabaseClient
-        .from('places')
-        .select('id, data')
-        .eq('user_id', currentUser.id)
-        .order('created_at', { ascending:false });
+      const { data, error } = await supabaseClient.rpc('list_places_light', { p_user_id: currentUser.id });
       if(error) throw error;
       places = (data||[]).map(row=>{
         const p = row.data;
         if(!Array.isArray(p.photos)) p.photos = [];
+        p._full = false;
         return p;
       });
     }catch(e){
-      console.warn('Failed to load places from Supabase', e);
-      places = [];
+      console.warn('list_places_light rpc unavailable, falling back to full select', e);
+      try{
+        const { data, error } = await supabaseClient
+          .from('places')
+          .select('id, data')
+          .eq('user_id', currentUser.id)
+          .order('created_at', { ascending:false });
+        if(error) throw error;
+        places = (data||[]).map(row=>{
+          const p = row.data;
+          if(!Array.isArray(p.photos)) p.photos = [];
+          p._full = true;
+          return p;
+        });
+      }catch(e2){
+        console.warn('Failed to load places from Supabase', e2);
+        places = [];
+      }
     }
     render();
     return;
@@ -172,6 +185,23 @@ async function loadPlaces(){
   }catch(e){ places = []; }
 
   render();
+}
+async function fetchFullPlace(id){
+  try{
+    const { data, error } = await supabaseClient
+      .from('places')
+      .select('data')
+      .eq('id', id)
+      .eq('user_id', currentUser.id)
+      .single();
+    if(error) throw error;
+    const p = data?.data;
+    if(p && !Array.isArray(p.photos)) p.photos = [];
+    return p || null;
+  }catch(e){
+    console.warn('Failed to load place photos from Supabase', e);
+    return null;
+  }
 }
 async function savePlace(place){
   // NOTE: save-failure popups are intentionally silenced for now (still
@@ -433,8 +463,17 @@ document.getElementById('petChip').onclick = ()=>{
 document.getElementById('openAddBtn').onclick = ()=>{ editingId=null; wizard=emptyPlace(); step=1; renderWizardSheet(); };
 
 /* ---------- detail view ---------- */
-function openDetail(id){
-  const p = places.find(x=>x.id===id); if(!p) return;
+async function openDetail(id){
+  let p = places.find(x=>x.id===id); if(!p) return;
+  if(currentUser && supabaseClient && !p._full){
+    const full = await fetchFullPlace(id);
+    if(full){
+      full._full = true;
+      const idx = places.findIndex(x=>x.id===id);
+      if(idx !== -1) places[idx] = full;
+      p = full;
+    }
+  }
   const old = document.getElementById('sheetOverlay');
   if(old) old.remove();
   const overlay = document.createElement('div');
@@ -961,6 +1000,7 @@ function bindStepEvents(overlay){
     overlay.querySelector('#saveBtn').onclick = ()=>{
       collectStep2(overlay);
       savePlace(wizard); // fire-and-forget; failures are silent for now, see savePlace()
+      wizard._full = true;
       if(editingId){
         const idx = places.findIndex(x=>x.id===editingId);
         places[idx] = wizard;
