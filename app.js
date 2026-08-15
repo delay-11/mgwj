@@ -641,7 +641,7 @@ function attachWizardGestures(overlay){
     }, { passive:true });
   }
 
-  const OWN_HSCROLL = '.photo-strip';
+  const OWN_HSCROLL = '.photo-strip, .sheet-actions, button, input, textarea, select';
   let touchStartX = 0, touchStartY = 0, touchTracking = false, touchIgnore = false;
   sheet.addEventListener('touchstart', (e)=>{
     if(e.touches.length !== 1) return;
