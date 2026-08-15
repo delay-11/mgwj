@@ -951,9 +951,9 @@ function bindStepEvents(overlay){
       collectStep2(overlay);
       step = 1; renderWizardSheet(true);
     };
-    overlay.querySelector('#saveBtn').onclick = async ()=>{
+    overlay.querySelector('#saveBtn').onclick = ()=>{
       collectStep2(overlay);
-      await savePlace(wizard); // failures are silent for now; see savePlace()
+      savePlace(wizard); // fire-and-forget; failures are silent for now, see savePlace()
       if(editingId){
         const idx = places.findIndex(x=>x.id===editingId);
         places[idx] = wizard;
