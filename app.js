@@ -608,24 +608,36 @@ function renderWizardSheet(isStepTransition){
 
 function attachWizardGestures(overlay){
   const sheet = overlay.querySelector('.sheet');
-  const handle = overlay.querySelector('.sheet-handle');
+  const dragZone = overlay.querySelector('.sheet-drag-zone');
   if(!sheet) return;
 
-  if(handle){
-    let handleStartY = 0, handleDragging = false;
-    handle.addEventListener('touchstart', (e)=>{
-      handleStartY = e.touches[0].clientY;
-      handleDragging = true;
+  if(dragZone){
+    let dragStartY = 0, dragging = false, dragDy = 0;
+    dragZone.addEventListener('touchstart', (e)=>{
+      if(e.touches.length !== 1) return;
+      dragStartY = e.touches[0].clientY;
+      dragging = true;
+      dragDy = 0;
+      sheet.style.transition = 'none';
     }, { passive:true });
-    handle.addEventListener('touchmove', (e)=>{
-      if(!handleDragging) return;
+    dragZone.addEventListener('touchmove', (e)=>{
+      if(!dragging) return;
+      const dy = e.touches[0].clientY - dragStartY;
+      if(dy <= 0){ dragDy = 0; sheet.style.transform = ''; return; }
       e.preventDefault();
+      dragDy = dy;
+      sheet.style.transform = `translateY(${dy}px)`;
     }, { passive:false });
-    handle.addEventListener('touchend', (e)=>{
-      if(!handleDragging) return;
-      handleDragging = false;
-      const dy = e.changedTouches[0].clientY - handleStartY;
-      if(dy > 40) overlay.remove();
+    dragZone.addEventListener('touchend', ()=>{
+      if(!dragging) return;
+      dragging = false;
+      sheet.style.transition = 'transform 0.2s ease-out';
+      if(dragDy > 90){
+        sheet.style.transform = 'translateY(100%)';
+        setTimeout(()=> overlay.remove(), 180);
+      } else {
+        sheet.style.transform = '';
+      }
     }, { passive:true });
   }
 
@@ -660,10 +672,12 @@ function step1Html(isStepTransition){
   const p = wizard;
   return `
   <div class="sheet${isStepTransition ? ' step-transition' : ''}">
-    <div class="sheet-handle"></div>
-    <div class="sheet-head">
-      <h2>${editingId ? '장소 수정' : '새로운 장소'}</h2>
-      <button class="close-x" id="closeSheet">✕</button>
+    <div class="sheet-drag-zone">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h2>${editingId ? '장소 수정' : '새로운 장소'}</h2>
+        <button class="close-x" id="closeSheet">✕</button>
+      </div>
     </div>
     <div class="steps-dots"><span class="on"></span><span></span></div>
 
@@ -719,10 +733,12 @@ function step2Html(isStepTransition){
   const p = wizard;
   return `
   <div class="sheet${isStepTransition ? ' step-transition' : ''}">
-    <div class="sheet-handle"></div>
-    <div class="sheet-head">
-      <h2>${editingId ? '장소 수정' : '새로운 장소'}</h2>
-      <button class="close-x" id="closeSheet">✕</button>
+    <div class="sheet-drag-zone">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h2>${editingId ? '장소 수정' : '새로운 장소'}</h2>
+        <button class="close-x" id="closeSheet">✕</button>
+      </div>
     </div>
     <div class="steps-dots"><span></span><span class="on"></span></div>
 
