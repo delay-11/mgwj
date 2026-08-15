@@ -593,13 +593,13 @@ function showDeleteConfirm(overlay){
   });
 }
 
-function renderWizardSheet(){
+function renderWizardSheet(isStepTransition){
   const old = document.getElementById('sheetOverlay');
   if(old) old.remove();
   const overlay = document.createElement('div');
   overlay.className = 'sheet-overlay';
   overlay.id = 'sheetOverlay';
-  overlay.innerHTML = step===1 ? step1Html() : step2Html();
+  overlay.innerHTML = step===1 ? step1Html(isStepTransition) : step2Html(isStepTransition);
   document.body.appendChild(overlay);
   overlay.onclick = (e)=>{ if(e.target===overlay) overlay.remove(); };
   bindStepEvents(overlay);
@@ -617,6 +617,10 @@ function attachWizardGestures(overlay){
       handleStartY = e.touches[0].clientY;
       handleDragging = true;
     }, { passive:true });
+    handle.addEventListener('touchmove', (e)=>{
+      if(!handleDragging) return;
+      e.preventDefault();
+    }, { passive:false });
     handle.addEventListener('touchend', (e)=>{
       if(!handleDragging) return;
       handleDragging = false;
@@ -652,10 +656,10 @@ function attachWizardGestures(overlay){
   }, { passive:true });
 }
 
-function step1Html(){
+function step1Html(isStepTransition){
   const p = wizard;
   return `
-  <div class="sheet">
+  <div class="sheet${isStepTransition ? ' step-transition' : ''}">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
       <h2>${editingId ? '장소 수정' : '새로운 장소'}</h2>
@@ -711,10 +715,10 @@ function step1Html(){
   </div>`;
 }
 
-function step2Html(){
+function step2Html(isStepTransition){
   const p = wizard;
   return `
-  <div class="sheet">
+  <div class="sheet${isStepTransition ? ' step-transition' : ''}">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
       <h2>${editingId ? '장소 수정' : '새로운 장소'}</h2>
@@ -869,7 +873,7 @@ function bindStepEvents(overlay){
       if(!name){ showToast('이름을 입력해주세요.'); return; }
       wizard.name = name;
       wizard.address = overlay.querySelector('#f_address').value.trim();
-      step = 2; renderWizardSheet();
+      step = 2; renderWizardSheet(true);
     };
   } else {
     overlay.querySelectorAll('.hours-mode-toggle .pill-btn').forEach(b=>{
@@ -929,7 +933,7 @@ function bindStepEvents(overlay){
 
     overlay.querySelector('#toStep1').onclick = ()=>{
       collectStep2(overlay);
-      step = 1; renderWizardSheet();
+      step = 1; renderWizardSheet(true);
     };
     overlay.querySelector('#saveBtn').onclick = async ()=>{
       collectStep2(overlay);
