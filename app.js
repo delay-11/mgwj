@@ -482,10 +482,12 @@ function openDetail(id){
 
   overlay.innerHTML = `
   <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-head">
-      <h2>상세 정보</h2>
-      <button class="close-x" id="closeSheet">✕</button>
+    <div class="sheet-drag-zone">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h2>상세 정보</h2>
+        <button class="close-x" id="closeSheet">✕</button>
+      </div>
     </div>
     ${galleryHtml}
     <div class="detail-title-row">
@@ -511,6 +513,7 @@ function openDetail(id){
     </div>
   </div>`;
   document.body.appendChild(overlay);
+  attachSheetDragClose(overlay);
   if(allPhotos.length > 1){
     const sc = overlay.querySelector('#gallerySc');
     const dots = overlay.querySelectorAll('#galleryDots span');
@@ -606,40 +609,44 @@ function renderWizardSheet(isStepTransition){
   attachWizardGestures(overlay);
 }
 
-function attachWizardGestures(overlay){
+function attachSheetDragClose(overlay){
   const sheet = overlay.querySelector('.sheet');
   const dragZone = overlay.querySelector('.sheet-drag-zone');
-  if(!sheet) return;
+  if(!sheet || !dragZone) return;
 
-  if(dragZone){
-    let dragStartY = 0, dragging = false, dragDy = 0;
-    dragZone.addEventListener('touchstart', (e)=>{
-      if(e.touches.length !== 1) return;
-      dragStartY = e.touches[0].clientY;
-      dragging = true;
-      dragDy = 0;
-      sheet.style.transition = 'none';
-    }, { passive:true });
-    dragZone.addEventListener('touchmove', (e)=>{
-      if(!dragging) return;
-      const dy = e.touches[0].clientY - dragStartY;
-      if(dy <= 0){ dragDy = 0; sheet.style.transform = ''; return; }
-      e.preventDefault();
-      dragDy = dy;
-      sheet.style.transform = `translateY(${dy}px)`;
-    }, { passive:false });
-    dragZone.addEventListener('touchend', ()=>{
-      if(!dragging) return;
-      dragging = false;
-      sheet.style.transition = 'transform 0.2s ease-out';
-      if(dragDy > 90){
-        sheet.style.transform = 'translateY(100%)';
-        setTimeout(()=> overlay.remove(), 180);
-      } else {
-        sheet.style.transform = '';
-      }
-    }, { passive:true });
-  }
+  let dragStartY = 0, dragging = false, dragDy = 0;
+  dragZone.addEventListener('touchstart', (e)=>{
+    if(e.touches.length !== 1) return;
+    dragStartY = e.touches[0].clientY;
+    dragging = true;
+    dragDy = 0;
+    sheet.style.transition = 'none';
+  }, { passive:true });
+  dragZone.addEventListener('touchmove', (e)=>{
+    if(!dragging) return;
+    const dy = e.touches[0].clientY - dragStartY;
+    if(dy <= 0){ dragDy = 0; sheet.style.transform = ''; return; }
+    e.preventDefault();
+    dragDy = dy;
+    sheet.style.transform = `translateY(${dy}px)`;
+  }, { passive:false });
+  dragZone.addEventListener('touchend', ()=>{
+    if(!dragging) return;
+    dragging = false;
+    sheet.style.transition = 'transform 0.2s ease-out';
+    if(dragDy > 90){
+      sheet.style.transform = 'translateY(100%)';
+      setTimeout(()=> overlay.remove(), 180);
+    } else {
+      sheet.style.transform = '';
+    }
+  }, { passive:true });
+}
+
+function attachWizardGestures(overlay){
+  const sheet = overlay.querySelector('.sheet');
+  if(!sheet) return;
+  attachSheetDragClose(overlay);
 
   const OWN_HSCROLL = '.photo-strip, .sheet-actions, button, input, textarea, select';
   let touchStartX = 0, touchStartY = 0, touchTracking = false, touchIgnore = false;
@@ -1018,10 +1025,12 @@ function openSettings(){
     : `<div class="settings-avatar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>`;
   overlay.innerHTML = `
   <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-head">
-      <h2>설정</h2>
-      <button class="close-x" id="closeSheet">✕</button>
+    <div class="sheet-drag-zone">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h2>설정</h2>
+        <button class="close-x" id="closeSheet">✕</button>
+      </div>
     </div>
 
     <div class="settings-card" style="margin-bottom:16px;">
@@ -1085,6 +1094,7 @@ function openSettings(){
     </div>
   </div>`;
   document.body.appendChild(overlay);
+  attachSheetDragClose(overlay);
   overlay.onclick = (e)=>{ if(e.target===overlay) overlay.remove(); };
   overlay.querySelector('#closeSheet').onclick = ()=> overlay.remove();
 
@@ -1181,14 +1191,17 @@ function openPrivacyPolicy(){
     </div>`).join('');
   overlay.innerHTML = `
   <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-head">
-      <h2>개인정보처리방침</h2>
-      <button class="close-x" id="closeSheet">✕</button>
+    <div class="sheet-drag-zone">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h2>개인정보처리방침</h2>
+        <button class="close-x" id="closeSheet">✕</button>
+      </div>
     </div>
     ${sectionsHtml}
   </div>`;
   document.body.appendChild(overlay);
+  attachSheetDragClose(overlay);
   overlay.onclick = (e)=>{ if(e.target===overlay) overlay.remove(); };
   overlay.querySelector('#closeSheet').onclick = ()=> overlay.remove();
 }
