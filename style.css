@@ -83,7 +83,8 @@ header.appbar{ padding:18px 18px 10px; }
 .sheet-overlay{position:fixed; inset:0; background:rgba(33,31,26,0.55); z-index:50; display:flex; align-items:flex-end; justify-content:center;}
 .sheet{ background:var(--bg); width:100%; max-width:var(--maxw); max-height:92vh; overflow-y:auto; border-radius:24px 24px 0 0; padding:10px 20px 24px; animation:slideup 0.22s ease-out; }
 @keyframes slideup{from{transform:translateY(30px); opacity:0;} to{transform:translateY(0); opacity:1;}}
-.sheet-handle{width:36px; height:4px; background:var(--line); border-radius:3px; margin:2px auto 10px; padding:10px 28px; background-clip:content-box; touch-action:none;}
+.sheet-drag-zone{touch-action:none;}
+.sheet-handle{width:36px; height:4px; background:var(--line); border-radius:3px; margin:6px auto 14px;}
 .sheet.step-transition{animation:none;}
 .sheet-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;}
 .sheet-head h2{font-size:17px; margin:0; font-weight:800;}
