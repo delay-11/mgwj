@@ -641,7 +641,7 @@ function attachWizardGestures(overlay){
     }, { passive:true });
   }
 
-  const OWN_HSCROLL = '.photo-strip, .region-grid, .district-grid, .cat-select, .day-grid, .custom-hours-list, .amenity-grid, .restroom-select, .hours-mode-toggle';
+  const OWN_HSCROLL = '.photo-strip';
   let touchStartX = 0, touchStartY = 0, touchTracking = false, touchIgnore = false;
   sheet.addEventListener('touchstart', (e)=>{
     if(e.touches.length !== 1) return;
