@@ -603,6 +603,53 @@ function renderWizardSheet(){
   document.body.appendChild(overlay);
   overlay.onclick = (e)=>{ if(e.target===overlay) overlay.remove(); };
   bindStepEvents(overlay);
+  attachWizardGestures(overlay);
+}
+
+function attachWizardGestures(overlay){
+  const sheet = overlay.querySelector('.sheet');
+  const handle = overlay.querySelector('.sheet-handle');
+  if(!sheet) return;
+
+  if(handle){
+    let handleStartY = 0, handleDragging = false;
+    handle.addEventListener('touchstart', (e)=>{
+      handleStartY = e.touches[0].clientY;
+      handleDragging = true;
+    }, { passive:true });
+    handle.addEventListener('touchend', (e)=>{
+      if(!handleDragging) return;
+      handleDragging = false;
+      const dy = e.changedTouches[0].clientY - handleStartY;
+      if(dy > 40) overlay.remove();
+    }, { passive:true });
+  }
+
+  const OWN_HSCROLL = '.photo-strip, .region-grid, .district-grid, .cat-select, .day-grid, .custom-hours-list, .amenity-grid, .restroom-select, .hours-mode-toggle';
+  let touchStartX = 0, touchStartY = 0, touchTracking = false, touchIgnore = false;
+  sheet.addEventListener('touchstart', (e)=>{
+    if(e.touches.length !== 1) return;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    touchTracking = true;
+    touchIgnore = !!(e.target.closest && e.target.closest(OWN_HSCROLL));
+  }, { passive:true });
+  sheet.addEventListener('touchend', (e)=>{
+    if(!touchTracking) return;
+    touchTracking = false;
+    if(touchIgnore) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5){
+      if(dx < 0 && step === 1){
+        const btn = overlay.querySelector('#toStep2');
+        if(btn) btn.click();
+      } else if(dx > 0 && step === 2){
+        const btn = overlay.querySelector('#toStep1');
+        if(btn) btn.click();
+      }
+    }
+  }, { passive:true });
 }
 
 function step1Html(){
