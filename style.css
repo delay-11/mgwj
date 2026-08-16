@@ -35,7 +35,7 @@ html[data-theme="dark"]{
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;}
-body{ background:var(--bg); color:var(--ink); font-family:-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", 'Noto Sans KR', sans-serif; -webkit-font-smoothing:antialiased; }
+body{ background:var(--bg); color:var(--ink); font-family:"Apple SD Gothic Neo", -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif; -webkit-font-smoothing:antialiased; }
 .app{max-width:var(--maxw); margin:0 auto; min-height:100vh; background:var(--bg); position:relative; padding-bottom:100px;}
 
 .app-top{ position:sticky; top:0; z-index:20; background:var(--bg); border-bottom:1px solid var(--line); }
