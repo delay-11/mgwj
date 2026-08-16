@@ -22,7 +22,7 @@ const REGIONS = Object.keys(REGION_DISTRICTS);
 const AMENITY_OPTIONS = ['예약','포장','배달','픽업가능','단체이용가능','무료주차','유료주차','발렛파킹','무선인터넷','남녀 화장실 구분','유아의자','노키즈존','야외석','반려동물 동반','대기공간','휴게공간','충전서비스','야간운영'];
 const AMENITY_ICON = {'예약':'📅','포장':'🥡','배달':'🛵','픽업가능':'🚶','단체이용가능':'👥','무료주차':'🅿️','유료주차':'💳','발렛파킹':'🚗','무선인터넷':'📶','남녀 화장실 구분':'🚻','유아의자':'🍼','노키즈존':'🚫','야외석':'☀️','반려동물 동반':'🐾','대기공간':'🪑','휴게공간':'🛋️','충전서비스':'🔌','야간운영':'🌙'};
 
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1';
 
 const SUPABASE_URL = 'https://xmuxoqjcxfxtqiockaum.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdXhvcWpjeGZ4dHFpb2NrYXVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1NjY5MzYsImV4cCI6MjEwMTE0MjkzNn0.ZxGDpFf5g7yzMst8lpbU226PQHMeUL60-cu7bytNcoU';
