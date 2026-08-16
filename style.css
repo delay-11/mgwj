@@ -83,8 +83,8 @@ header.appbar{ padding:18px 18px 10px; }
   display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:30; }
 @media (min-width:480px){ .fab{ right:calc(50% - var(--maxw)/2 + 20px); } }
 
-.sheet-overlay{position:fixed; inset:0; background:rgba(33,31,26,0.55); z-index:50; display:flex; align-items:flex-end; justify-content:center;}
-.sheet{ background:var(--bg); width:100%; max-width:var(--maxw); max-height:92vh; overflow-y:auto; border-radius:24px 24px 0 0; padding:10px 20px 24px; animation:slideup 0.22s ease-out; }
+.sheet-overlay{position:fixed; inset:0; height:100vh; height:100dvh; background:rgba(33,31,26,0.55); z-index:50; display:flex; align-items:flex-end; justify-content:center;}
+.sheet{ background:var(--bg); width:100%; max-width:var(--maxw); max-height:92vh; max-height:92dvh; overflow-y:auto; border-radius:24px 24px 0 0; padding:10px 20px 24px; animation:slideup 0.22s ease-out; }
 @keyframes slideup{from{transform:translateY(30px); opacity:0;} to{transform:translateY(0); opacity:1;}}
 .sheet-drag-zone{touch-action:none;}
 .sheet-handle{width:36px; height:4px; background:var(--line); border-radius:3px; margin:6px auto 14px;}
