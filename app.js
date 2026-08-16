@@ -412,6 +412,7 @@ function render(){
     const thumbHtml = p.thumbnail
       ? `<div class="thumb" style="background-image:url('${p.thumbnail}')"><span class="cat-pill">${p.category}</span></div>`
       : `<div class="thumb empty"><span class="cat-pill">${p.category}</span></div>`;
+    const memoHtml = p.memo ? `<div class="memo-preview">${escapeHtml(p.memo)}</div>` : '';
     return `
     <div class="card" onclick="openDetail('${p.id}')">
       ${thumbHtml}
@@ -422,6 +423,7 @@ function render(){
           <span class="dot ${st.cls}"></span>
           <span class="stxt ${st.cls}">${st.label}</span>
         </div>
+        ${memoHtml}
       </div>
     </div>`;
   }).join('');
