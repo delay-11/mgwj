@@ -54,7 +54,7 @@ header.appbar{ padding:18px 18px 10px; }
 .fchip.hasval{background:var(--accent-soft); border-color:var(--accent); color:var(--accent);}
 .fchip.hasval select{color:var(--accent);}
 
-.grid{display:grid; grid-template-columns:1fr 1fr; gap:13px; padding:16px 18px 20px;}
+.grid{display:grid; grid-template-columns:1fr 1fr; gap:13px; padding:16px 18px 20px; align-items:start;}
 .card{background:var(--surface); border-radius:var(--radius); overflow:hidden; border:1.5px solid var(--line); cursor:pointer; box-shadow:0 4px 14px -10px rgba(33,31,26,0.22);}
 .thumb{width:100%; aspect-ratio:1/1; background:var(--accent-soft) center/cover no-repeat; position:relative;}
 .thumb.empty{background:var(--accent-soft);}
