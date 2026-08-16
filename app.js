@@ -291,7 +291,9 @@ async function initAuth(){
   currentUser = session?.user ?? null;
   if(currentUser) await migrateGuestPlacesToAccount();
   await loadPlaces();
+  let skipInitialFire = true;
   supabaseClient.auth.onAuthStateChange(async (event, session)=>{
+    if(skipInitialFire){ skipInitialFire = false; return; }
     currentUser = session?.user ?? null;
     if(event === 'SIGNED_IN' && currentUser) await migrateGuestPlacesToAccount();
     loadPlaces();
@@ -398,6 +400,7 @@ function render(){
   updateRegionOptions();
   const grid = document.getElementById('grid');
   const list = getFiltered();
+  document.getElementById('loadingState').style.display = 'none';
   document.getElementById('emptyState').style.display = places.length===0 ? 'block':'none';
   grid.style.display = places.length===0 ? 'none':'grid';
 
