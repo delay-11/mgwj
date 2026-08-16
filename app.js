@@ -22,6 +22,8 @@ const REGIONS = Object.keys(REGION_DISTRICTS);
 const AMENITY_OPTIONS = ['예약','포장','배달','픽업가능','단체이용가능','무료주차','유료주차','발렛파킹','무선인터넷','남녀 화장실 구분','유아의자','노키즈존','야외석','반려동물 동반','대기공간','휴게공간','충전서비스','야간운영'];
 const AMENITY_ICON = {'예약':'📅','포장':'🥡','배달':'🛵','픽업가능':'🚶','단체이용가능':'👥','무료주차':'🅿️','유료주차':'💳','발렛파킹':'🚗','무선인터넷':'📶','남녀 화장실 구분':'🚻','유아의자':'🍼','노키즈존':'🚫','야외석':'☀️','반려동물 동반':'🐾','대기공간':'🪑','휴게공간':'🛋️','충전서비스':'🔌','야간운영':'🌙'};
 
+const APP_VERSION = '1.0.0';
+
 const SUPABASE_URL = 'https://xmuxoqjcxfxtqiockaum.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdXhvcWpjeGZ4dHFpb2NrYXVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1NjY5MzYsImV4cCI6MjEwMTE0MjkzNn0.ZxGDpFf5g7yzMst8lpbU226PQHMeUL60-cu7bytNcoU';
 const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
@@ -63,6 +65,31 @@ let currentUser = null;
       return { keys, prefix, shared:false };
     }
   };
+})();
+
+/* Locks page scroll while any sheet overlay is open, so swiping inside
+   the sheet (or on the dimmed backdrop) never scrolls the page behind it. */
+(function setupSheetScrollLock(){
+  let savedY = 0;
+  function lock(){
+    savedY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = -savedY + 'px';
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+  }
+  function unlock(){
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    window.scrollTo(0, savedY);
+  }
+  new MutationObserver(()=>{
+    const hasOverlay = !!document.querySelector('.sheet-overlay');
+    if(hasOverlay && document.body.style.position !== 'fixed') lock();
+    else if(!hasOverlay && document.body.style.position === 'fixed') unlock();
+  }).observe(document.body, { childList:true });
 })();
 
 let places = [];
@@ -1120,16 +1147,20 @@ function openSettings(){
     <div class="settings-section">
       <div class="settings-section-title">앱 정보</div>
       <div class="settings-card">
+        <div class="settings-row">
+          <div class="settings-row-label">앱 버전</div>
+          <span class="settings-row-value">${APP_VERSION}</span>
+        </div>
+        <div class="settings-row" id="privacyRow" style="cursor:pointer;">
+          <div class="settings-row-label">개인정보처리방침</div>
+          <span style="color:var(--ink-faint); font-size:16px;">›</span>
+        </div>
         <div class="settings-row" id="feedbackRow" style="cursor:pointer;">
           <div>
             <div class="settings-row-label">피드백 보내기</div>
             <div class="settings-row-sub">불편한 점이나 개선 아이디어를 알려주세요</div>
           </div>
           <span style="color:var(--ink-faint); font-size:16px;" id="feedbackChevron">›</span>
-        </div>
-        <div class="settings-row" id="privacyRow" style="cursor:pointer;">
-          <div class="settings-row-label">개인정보처리방침</div>
-          <span style="color:var(--ink-faint); font-size:16px;">›</span>
         </div>
       </div>
       <div id="feedbackForm" style="display:none; padding-top:10px;">
