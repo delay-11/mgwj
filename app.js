@@ -1189,9 +1189,12 @@ function openSettings(){
     form.style.display = open ? 'none' : 'block';
     overlay.querySelector('#feedbackChevron').textContent = open ? '›' : '⌄';
   };
-  overlay.querySelector('#submitFeedback').onclick = async ()=>{
+  overlay.querySelector('#submitFeedback').onclick = async (e)=>{
+    const btn = e.currentTarget;
+    if(btn.disabled) return;
     const text = overlay.querySelector('#feedbackText').value.trim();
     if(!text){ showToast('내용을 입력해주세요.'); return; }
+    btn.disabled = true;
     try{
       if(supabaseClient){
         await supabaseClient.from('feedback').insert({ text, user_id: currentUser ? currentUser.id : null });
@@ -1200,6 +1203,7 @@ function openSettings(){
     overlay.querySelector('#feedbackForm').style.display = 'none';
     overlay.querySelector('#feedbackText').value = '';
     showToast('피드백을 남겨주셔서 감사해요!');
+    btn.disabled = false;
   };
 
   overlay.querySelectorAll('#themeSelect .pill-btn').forEach(btn=>{
